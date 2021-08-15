@@ -12,11 +12,6 @@ pub extern "C" fn _start() -> ! {
     println!("Hello World! {}", 123);
     osh1mc::init();
 
-    fn stack_overflow() {
-        stack_overflow();
-    }
-    stack_overflow();
-
     #[cfg(test)]
     test_main();
     
