@@ -10,10 +10,14 @@ use osh1mc::println;
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
     println!("Hello World! {}", 123);
+    osh1mc::init();
+
+    x86_64::instructions::interrupts::int3();
 
     #[cfg(test)]
     test_main();
-
+    
+    println!("It did not crash!");
     loop {}
 }
 
