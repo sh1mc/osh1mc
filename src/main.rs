@@ -16,17 +16,14 @@ pub extern "C" fn _start() -> ! {
     test_main();
 
     println!("It did not crash!");
-    loop {
-        use osh1mc::print;
-        print!("-");
-    }
+    osh1mc::hlt_loop();
 }
 
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
-    loop {}
+    osh1mc::hlt_loop();
 }
 
 #[cfg(test)]
