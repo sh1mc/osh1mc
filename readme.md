@@ -2,7 +2,7 @@
 
 An OS written in Rust.
 
-# How to build
+# How to run
 
 Install QEMU and execute following commands.
 ```
