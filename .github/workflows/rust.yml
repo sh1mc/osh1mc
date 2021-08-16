@@ -91,7 +91,8 @@ jobs:
           toolchain: nightly
           components: clippy, rust-src
           override: true
-      - name: Run `cargo clippy`
-        uses: actions-rs/cargo@v1
+      - name: Run clippy-check
+        uses: actions-rs/clippy-check@v1
         with:
-          command: clippy
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features
