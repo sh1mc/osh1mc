@@ -53,7 +53,7 @@ jobs:
 
       # install QEMU
       - name: Install QEMU (Linux)
-        run: sudo apt update && sudo apt install qemu-system-x86
+        run: sudo apt-get update && sudo apt-get install qemu-system-x86
       - name: Run `cargo test`
         uses: actions-rs/cargo@v1
         with:
