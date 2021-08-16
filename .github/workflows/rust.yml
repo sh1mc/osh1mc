@@ -53,7 +53,7 @@ jobs:
 
       # install QEMU
       - name: Install QEMU (Linux)
-        run: sudo apt update && sudo apt install qemu-system-x86
+        run: sudo apt-get update && sudo apt-get install qemu-system-x86
       - name: Run `cargo test`
         uses: actions-rs/cargo@v1
         with:
@@ -91,7 +91,8 @@ jobs:
           toolchain: nightly
           components: clippy, rust-src
           override: true
-      - name: Run `cargo clippy`
-        uses: actions-rs/cargo@v1
+      - name: Run clippy-check
+        uses: actions-rs/clippy-check@v1
         with:
-          command: clippy
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features
