@@ -16,7 +16,10 @@ pub extern "C" fn _start() -> ! {
     test_main();
     
     println!("It did not crash!");
-    loop {}
+    loop {
+        use osh1mc::print;
+        print!("-");
+    }
 }
 
 #[cfg(not(test))]
