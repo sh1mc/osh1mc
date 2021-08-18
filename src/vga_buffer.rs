@@ -121,14 +121,14 @@ lazy_static! {
 }
 
 #[macro_export]
-macro_rules! print {
+macro_rules! vga_print {
     ($($arg:tt)*) => ($crate::vga_buffer::_print(format_args!($($arg)*)))
 }
 
 #[macro_export]
-macro_rules! println {
-    () => ($crate::print!("\n"));
-    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
+macro_rules! vga_println {
+    () => ($crate::vga_print!("\n"));
+    ($($arg:tt)*) => ($crate::vga_print!("{}\n", format_args!($($arg)*)));
 }
 
 #[doc(hidden)]
@@ -142,13 +142,13 @@ pub fn _print(args: fmt::Arguments) {
 
 #[test_case]
 fn test_println_simple() {
-    println!("test_println_simple output");
+    vga_println!("test_println_simple output");
 }
 
 #[test_case]
 fn test_println_many() {
     for _ in 0..200 {
-        println!("test_println_many output");
+        vga_println!("test_println_many output");
     }
 }
 
