@@ -3,12 +3,35 @@
 #![feature(custom_test_frameworks)]
 #![test_runner(osh1mc::test_runner)]
 #![reexport_test_harness_main = "test_main"]
+#![feature(abi_efiapi)]
 
 use core::panic::PanicInfo;
 use osh1mc::println;
 
 #[no_mangle]
-pub extern "C" fn _start() -> ! {
+#[cfg(not(target_os = "uefi"))]
+pub fn _start() -> ! {
+    main();
+}
+
+// entry point for UEFI
+#[cfg(target_os = "uefi")]
+#[no_mangle]
+pub extern "efiapi" fn efi_main(
+    _handle: uefi::Handle,
+    stable: uefi::table::SystemTable<uefi::table::Boot>,
+) -> uefi::Status {
+    use core::fmt::Write;
+
+    stable.stdout().reset(false).unwrap();
+    writeln!(stable.stdout(), "hello").unwrap();
+
+    main();
+
+    loop {}
+}
+
+fn main() -> ! {
     println!("Hello World! {}", 123);
     osh1mc::init();
 
