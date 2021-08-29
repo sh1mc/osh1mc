@@ -7,13 +7,14 @@
 use bootloader::{entry_point, BootInfo};
 use core::panic::PanicInfo;
 use osh1mc::println;
-use x86_64::VirtAddr;
 
 entry_point!(kernel_main);
 
 #[no_mangle]
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
-    use osh1mc::memory::translate_addr;
+    use osh1mc::memory;
+    use x86_64::structures::paging::Translate;
+    use x86_64::VirtAddr;
 
     println!("Hello World! {}", 123);
     osh1mc::init();
@@ -24,11 +25,12 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
         0x0100_0020_1a10,                 // stack page
         boot_info.physical_memory_offset, // virtual address mapped to physical address 0
     ];
-
     let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
+    let mapper = unsafe { memory::init(phys_mem_offset) };
+
     for &address in &addresses {
         let virt = VirtAddr::new(address);
-        let phys = unsafe { translate_addr(virt, phys_mem_offset) };
+        let phys = mapper.translate_addr(virt);
         println!("{:?} -> {:?}", virt, phys);
     }
 
