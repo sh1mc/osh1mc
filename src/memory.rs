@@ -50,6 +50,14 @@ pub unsafe fn translate_addr(addr: VirtAddr, physical_memory_offset: VirtAddr) -
     translate_addr_inner(addr, physical_memory_offset)
 }
 
+pub struct EmptyFrameAllocator;
+
+unsafe impl FrameAllocator<Size4KiB> for EmptyFrameAllocator {
+    fn allocate_frame(&mut self) -> Option<PhysFrame> {
+        None
+    }
+}
+
 // FIXME
 pub fn create_example_mapping(
     page: Page,
