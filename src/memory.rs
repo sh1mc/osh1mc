@@ -93,7 +93,6 @@ unsafe impl FrameAllocator<Size4KiB> for BootInfoFrameAllocator {
     }
 }
 
-// FIXME
 pub fn create_example_mapping(
     page: Page,
     mapper: &mut OffsetPageTable,

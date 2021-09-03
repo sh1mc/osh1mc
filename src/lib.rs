@@ -65,6 +65,9 @@ pub fn hlt_loop() -> ! {
 }
 
 pub fn init() {
+    use x86_64::instructions::port::Port;
+    let mut port = Port::new(0x64);
+    unsafe { port.write(0xd4 as u8) };
     gdt::init();
     interrupts::init_idt();
     unsafe { interrupts::PICS.lock().initialize() }
