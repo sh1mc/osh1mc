@@ -5,6 +5,7 @@
 #![reexport_test_harness_main = "test_main"]
 
 use bootloader::{entry_point, BootInfo};
+use vga::writers::{Graphics320x240x256, Graphics640x480x16, GraphicsWriter};
 use core::panic::PanicInfo;
 use osh1mc::println;
 
@@ -16,6 +17,13 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     use osh1mc::memory::BootInfoFrameAllocator;
     use x86_64::structures::paging::Page;
     use x86_64::VirtAddr;
+
+    use vga::colors::{Color16, TextModeColor};
+    //use vga::writers::{ScreenCharacter, TextWriter, Text80x25};
+    let mode = Graphics320x240x256::new();
+    mode.set_mode();
+    mode.clear_screen(0x00);
+    mode.draw_line((10, 10), (300, 220), 0xff);
 
     println!("Hello World! {}", 123);
     osh1mc::init();
