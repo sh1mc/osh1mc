@@ -5,11 +5,32 @@
 #![reexport_test_harness_main = "test_main"]
 
 use bootloader::{entry_point, BootInfo};
-use vga::writers::{Graphics320x240x256, Graphics640x480x16, GraphicsWriter};
+use vga::writers::{Graphics320x240x256, GraphicsWriter};
 use core::panic::PanicInfo;
 use osh1mc::println;
+//use embedded_graphics_core::
 
 entry_point!(kernel_main);
+
+fn max(x: i32, y: i32) -> i32 {
+    let ret;
+    if x > y {
+        ret = x;
+    } else {
+        ret = y;
+    }
+    ret
+}
+
+fn abs(x: i32) -> i32 {
+    let ret;
+    if x < 0 {
+        ret = x * -1;
+    } else {
+        ret = x;
+    }
+    ret
+}
 
 #[no_mangle]
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
@@ -23,6 +44,25 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     let mode = Graphics320x240x256::new();
     mode.set_mode();
     mode.clear_screen(0x00);
+    let height = 240;
+    let width = 320;
+    let frame_buf = mode.get_frame_buffer();
+    for y in 0..height {
+        for x in 0..width {
+            let get_pixel = || {
+                unsafe {*(((frame_buf as i32) + (x + y * width) / 4) as *mut u8)}
+            };
+            let x_fixed = x - width / 2;
+            let y_fixed = y - height / 2;
+            let set_pixel = |col| {
+                unsafe {*(((frame_buf as i32) + (x + y * width) / 4) as *mut u8) = col};
+            };
+            let col: u8 = if max(abs(x_fixed), abs(y_fixed)) < 50 {0x20} else {get_pixel()};
+            set_pixel(col);
+            let col: u8 = if x_fixed * x_fixed + y_fixed * y_fixed < 1000 {0x10} else {get_pixel()};
+            set_pixel(col);
+        }
+    }
     mode.draw_line((10, 10), (300, 220), 0xff);
 
     println!("Hello World! {}", 123);
