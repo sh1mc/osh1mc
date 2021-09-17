@@ -6,6 +6,7 @@
 #![feature(abi_x86_interrupt)]
 
 pub mod gdt;
+pub mod graphic;
 pub mod interrupts;
 pub mod memory;
 pub mod serial;

@@ -5,9 +5,9 @@
 #![reexport_test_harness_main = "test_main"]
 
 use bootloader::{entry_point, BootInfo};
-use vga::writers::{Graphics320x240x256, GraphicsWriter};
 use core::panic::PanicInfo;
 use osh1mc::println;
+use vga::writers::{Graphics320x240x256, GraphicsWriter};
 //use embedded_graphics_core::
 
 entry_point!(kernel_main);
@@ -39,6 +39,7 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     use x86_64::structures::paging::Page;
     use x86_64::VirtAddr;
 
+    /*
     use vga::colors::{Color16, TextModeColor};
     //use vga::writers::{ScreenCharacter, TextWriter, Text80x25};
     let mode = Graphics320x240x256::new();
@@ -64,9 +65,11 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
         }
     }
     mode.draw_line((10, 10), (300, 220), 0xff);
+    */
 
     println!("Hello World! {}", 123);
     osh1mc::init();
+    osh1mc::graphic::init_graphics();
 
     let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
     let mut mapper = unsafe { memory::init(phys_mem_offset) };
