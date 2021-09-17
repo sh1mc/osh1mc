@@ -21,11 +21,7 @@ lazy_static! {
         bg_color: 0x00,
         fg_color: 0xff,
         text_buffer: TextBuffer {
-            chars: [[ScreenChar {
-                character: ' ',
-                bg_color: 0x00,
-                fg_color: 0xff,
-            }; TEXT_BUFFER_WIDTH]; TEXT_BUFFER_HEIGHT]
+            chars: [[ScreenChar::new(); TEXT_BUFFER_WIDTH]; TEXT_BUFFER_HEIGHT]
         },
     });
 }
@@ -35,6 +31,16 @@ struct ScreenChar {
     character: char,
     bg_color: u8,
     fg_color: u8,
+}
+
+impl ScreenChar {
+    fn new() -> Self {
+        Self {
+            character: ' ',
+            bg_color: 0x00,
+            fg_color: 0xff,
+        }
+    }
 }
 
 struct TextBuffer {
@@ -49,6 +55,7 @@ pub struct TextWriter {
 }
 
 impl TextWriter {
+    pub fn new() {}
     pub fn write_char(&mut self, character: char) {
         match character {
             '\n' => self.new_line(),
@@ -74,23 +81,38 @@ impl TextWriter {
     }
     pub fn render_text_buffer(&mut self) {
         for row in 0..TEXT_BUFFER_HEIGHT {
-            for col in 0..TEXT_BUFFER_WIDTH {
-                let screen_char = &self.text_buffer.chars[TEXT_BUFFER_HEIGHT - row - 1][col];
-                for y in 0..FONT_HEIGHT {
-                    for x in 0..FONT_WIDTH {
-                        GRAPHICS_WRITER.lock().set_pixel(
-                            col * FONT_WIDTH,
-                            row * FONT_HEIGHT,
-                            screen_char.bg_color,
-                        );
-                    }
+            self.render_text_buffer_row(row);
+        }
+    }
+    fn render_text_buffer_row(&mut self, row: usize) {
+        for col in 0..TEXT_BUFFER_WIDTH {
+            let screen_char = &self.text_buffer.chars[TEXT_BUFFER_HEIGHT - row - 1][col];
+            for y in 0..FONT_HEIGHT {
+                for x in 0..FONT_WIDTH {
+                    GRAPHICS_WRITER.lock().set_pixel(
+                        col * FONT_WIDTH,
+                        row * FONT_HEIGHT,
+                        screen_char.bg_color,
+                    );
                 }
-                GRAPHICS_WRITER.lock().draw_character(
-                    col * FONT_WIDTH,
-                    (TEXT_BUFFER_HEIGHT - row - 1) * FONT_HEIGHT,
-                    screen_char.character,
-                    screen_char.fg_color,
-                );
+            }
+            GRAPHICS_WRITER.lock().draw_character(
+                col * FONT_WIDTH,
+                (TEXT_BUFFER_HEIGHT - row - 1) * FONT_HEIGHT,
+                screen_char.character,
+                screen_char.fg_color,
+            );
+        }
+    }
+    fn scroll_row(&self) {
+        let frame_buffer = GRAPHICS_WRITER.lock().get_frame_buffer();
+        for row in (0..(FRAME_BUFFER_HEIGHT - FONT_HEIGHT)).rev() {
+            for col in 0..FRAME_BUFFER_WIDTH {
+                unsafe {
+                    *((frame_buffer as usize + row * FRAME_BUFFER_WIDTH + col) as *mut u8) =
+                        *((frame_buffer as usize + (row - FONT_HEIGHT) * FRAME_BUFFER_WIDTH + col)
+                            as *mut u8)
+                };
             }
         }
     }
