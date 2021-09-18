@@ -1,10 +1,14 @@
 #![no_std]
 #![cfg_attr(test, no_main)]
-#![feature(custom_test_frameworks)]
 #![test_runner(crate::test_runner)]
 #![reexport_test_harness_main = "test_main"]
+#![feature(custom_test_frameworks)]
 #![feature(abi_x86_interrupt)]
+#![feature(alloc_error_handler)]
 
+extern crate alloc;
+
+pub mod allocator;
 pub mod gdt;
 pub mod graphic;
 pub mod interrupts;

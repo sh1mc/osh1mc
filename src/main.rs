@@ -4,10 +4,14 @@
 #![test_runner(osh1mc::test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
+extern crate alloc;
+
+use alloc::boxed::Box;
 use bootloader::{entry_point, BootInfo};
 use core::panic::PanicInfo;
 use osh1mc::{graphic::GRAPHICS_WRITER, print, println};
 use vga::writers::GraphicsWriter;
+use x86_64::structures::paging::frame;
 
 entry_point!(kernel_main);
 
@@ -66,8 +70,13 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     mode.draw_line((10, 10), (300, 220), 0xff);
     */
 
+    use osh1mc::allocator;
     use osh1mc::graphic::{FRAME_BUFFER_HEIGHT, FRAME_BUFFER_WIDTH};
     osh1mc::init();
+    let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
+    let mut mapper = unsafe { memory::init(phys_mem_offset) };
+    let mut frame_allocator = unsafe { BootInfoFrameAllocator::init(&boot_info.memory_map) };
+    allocator::init_heap(&mut mapper, &mut frame_allocator).expect("heap initialization failed.");
     osh1mc::graphic::init_graphics();
     println!("");
     osh1mc::graphic::TEXT_WRITER.lock().set_color(0x03, 0x16);
@@ -83,6 +92,7 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
                 .set_pixel(x as usize, y as usize, color);
         }
     }
+    let x = Box::new(41);
     let logo = include_bytes!("data/logo.txt");
     for l in logo {
         print!("{}", *l as char);
@@ -90,8 +100,6 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
 
     /*
     let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
-    let mut mapper = unsafe { memory::init(phys_mem_offset) };
-    let mut frame_allocator = unsafe { BootInfoFrameAllocator::init(&boot_info.memory_map) };
 
     let page = Page::containing_address(VirtAddr::new(0xdeadbeaf000));
     memory::create_example_mapping(page, &mut mapper, &mut frame_allocator);
@@ -114,6 +122,8 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
+    use osh1mc::graphic::TEXT_WRITER;
+    TEXT_WRITER.lock().set_color(0x01, 0xff);
     println!("{}", info);
     osh1mc::hlt_loop();
 }
