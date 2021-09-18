@@ -7,8 +7,7 @@
 use bootloader::{entry_point, BootInfo};
 use core::panic::PanicInfo;
 use osh1mc::{graphic::GRAPHICS_WRITER, print, println};
-use vga::writers::{Graphics320x240x256, GraphicsWriter};
-//use embedded_graphics_core::
+use vga::writers::GraphicsWriter;
 
 entry_point!(kernel_main);
 
@@ -67,23 +66,24 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     mode.draw_line((10, 10), (300, 220), 0xff);
     */
 
+    use osh1mc::graphic::{FRAME_BUFFER_HEIGHT, FRAME_BUFFER_WIDTH};
     osh1mc::init();
     osh1mc::graphic::init_graphics();
     println!("");
     osh1mc::graphic::TEXT_WRITER.lock().set_color(0x03, 0x16);
     println!("Hello World! {}", 123);
     osh1mc::graphic::TEXT_WRITER.lock().set_color(0x00, 0xff);
-    for y in 0..osh1mc::graphic::FRAME_BUFFER_HEIGHT as i32 {
-        for x in 0..osh1mc::graphic::FRAME_BUFFER_WIDTH as i32 {
-            let x0 = x - osh1mc::graphic::FRAME_BUFFER_WIDTH as i32 / 2;
-            let y0 = y - osh1mc::graphic::FRAME_BUFFER_HEIGHT as i32 / 2;
-            let dist = ((x0 * x0 + y0 * y0) / 5 % 0x100) as u8;
+    for y in 0..FRAME_BUFFER_HEIGHT as i64 {
+        for x in 0..FRAME_BUFFER_WIDTH as i64 {
+            let x0 = x - FRAME_BUFFER_WIDTH as i64 / 2;
+            let y0 = y - FRAME_BUFFER_HEIGHT as i64 / 2;
+            let color = ((x0 * x0 + y0 * y0) / 24 % 0x32) as u8;
             osh1mc::graphic::GRAPHICS_WRITER
                 .lock()
-                .set_pixel(x as usize, y as usize, dist);
+                .set_pixel(x as usize, y as usize, color);
         }
     }
-    let logo = include_bytes!("logo.txt");
+    let logo = include_bytes!("data/logo.txt");
     for l in logo {
         print!("{}", *l as char);
     }
