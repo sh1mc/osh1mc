@@ -1,7 +1,7 @@
+use core::fmt;
 use lazy_static::lazy_static;
 use spin::Mutex;
 use vga::writers::{Graphics320x240x256, GraphicsWriter, Screen};
-use volatile::Volatile;
 
 const FRAME_BUFFER_HEIGHT: usize = Graphics320x240x256::HEIGHT;
 const FRAME_BUFFER_WIDTH: usize = Graphics320x240x256::WIDTH;
@@ -70,6 +70,7 @@ impl TextWriter {
                     bg_color: self.bg_color,
                     fg_color: self.fg_color,
                 };
+                self.render_text_buffer_col(0, col);
                 self.column_pos += 1;
             }
         }
@@ -86,36 +87,32 @@ impl TextWriter {
     }
     fn render_text_buffer_row(&mut self, row: usize) {
         for col in 0..TEXT_BUFFER_WIDTH {
-            let screen_char = &self.text_buffer.chars[TEXT_BUFFER_HEIGHT - row - 1][col];
-            for y in 0..FONT_HEIGHT {
-                for x in 0..FONT_WIDTH {
-                    GRAPHICS_WRITER.lock().set_pixel(
-                        col * FONT_WIDTH + x,
-                        (TEXT_BUFFER_HEIGHT - row - 1) * FONT_HEIGHT + y,
-                        screen_char.bg_color,
-                    );
-                }
-            }
-            GRAPHICS_WRITER.lock().draw_character(
-                col * FONT_WIDTH,
-                (TEXT_BUFFER_HEIGHT - row - 1) * FONT_HEIGHT,
-                screen_char.character,
-                screen_char.fg_color,
-            );
+            self.render_text_buffer_col(row, col);
         }
     }
-    fn scroll_row(&self) {
-        let frame_buffer = GRAPHICS_WRITER.lock().get_frame_buffer();
-        for row in 0..(FRAME_BUFFER_HEIGHT - FONT_HEIGHT) {
-            for col in 0..(FRAME_BUFFER_WIDTH) {
-                unsafe {
-                    *((frame_buffer as usize + row * FRAME_BUFFER_WIDTH / 4 + col / 4) as *mut u8) =
-                        *((frame_buffer as usize
-                            + (row + FONT_HEIGHT) * FRAME_BUFFER_WIDTH / 4
-                            + col / 4) as *mut u8)
-                };
+    fn render_text_buffer_col(&mut self, row: usize, col: usize) {
+        let screen_char = &self.text_buffer.chars[TEXT_BUFFER_HEIGHT - row - 1][col];
+        if row < TEXT_BUFFER_HEIGHT - 1 {
+            let old_screen_char = &self.text_buffer.chars[TEXT_BUFFER_HEIGHT - row - 2][col];
+            if screen_char == old_screen_char && screen_char.character == ' ' {
+                return;
             }
         }
+        for y in 0..FONT_HEIGHT {
+            for x in 0..FONT_WIDTH {
+                GRAPHICS_WRITER.lock().set_pixel(
+                    col * FONT_WIDTH + x,
+                    (TEXT_BUFFER_HEIGHT - row - 1) * FONT_HEIGHT + y,
+                    screen_char.bg_color,
+                );
+            }
+        }
+        GRAPHICS_WRITER.lock().draw_character(
+            col * FONT_WIDTH,
+            (TEXT_BUFFER_HEIGHT - row - 1) * FONT_HEIGHT,
+            screen_char.character,
+            screen_char.fg_color,
+        );
     }
     fn new_line(&mut self) {
         self.render_text_buffer_row(0);
@@ -128,30 +125,37 @@ impl TextWriter {
             self.text_buffer.chars[TEXT_BUFFER_HEIGHT - 1][col] = ScreenChar::new();
         }
         self.column_pos = 0;
-        self.scroll_row();
-        self.render_text_buffer_row(0);
+        self.render_text_buffer();
     }
 }
 
 pub fn init_graphics() {
     GRAPHICS_WRITER.lock().set_mode();
     GRAPHICS_WRITER.lock().clear_screen(0x00);
-    /*
-    for (offset, character) in "Hello World!".chars().enumerate() {
-        GRAPHICS_WRITER
-            .lock()
-            .draw_character(offset * 8, 0, character, 0xff);
-    }
-    */
-    for _ in 0..20 {
-        TEXT_WRITER.lock().write_string("abcdefg\n");
-        TEXT_WRITER.lock().write_string("123\n");
-    }
-    TEXT_WRITER.lock().write_string("It did not crashed!\n");
-    //GRAPHICS_WRITER.lock().clear_screen(0xff);
 }
 
-#[repr(transparent)]
-struct FrameBuffer {
-    pixel: [[Volatile<u8>; FRAME_BUFFER_WIDTH]; FRAME_BUFFER_HEIGHT],
+impl fmt::Write for TextWriter {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.write_string(s);
+        Ok(())
+    }
+}
+
+#[doc(hidden)]
+pub fn _print(args: fmt::Arguments) {
+    use core::fmt::Write;
+    use x86_64::instructions::interrupts;
+    interrupts::without_interrupts(|| {
+        TEXT_WRITER.lock().write_fmt(args).unwrap();
+    });
+}
+
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => ($crate::graphic::_print(format_args!($($arg)*)))
+}
+
+#[macro_export]
+macro_rules! println {
+    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
 }
