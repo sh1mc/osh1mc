@@ -1,0 +1,71 @@
+// Place your key bindings in this file to override the defaults
+[
+    {
+        "key": "F5",
+        "command": "terminalCommandKeys.run",
+        "args": {
+            "cmd": "cd (Get-Item \"${file}\").DirectoryName; make"
+            //"cmd": "cd (Get-Item \"${file}\").DirectoryName;make"
+        }
+    },
+    {
+        "key": "ctrl+q",
+        "command": "extension.vim_ctrl+w",
+        "when": "editorTextFocus && vim.active && vim.use<C-q> && !inDebugRepl"
+    },
+    {
+        "key": "ctrl+q k",
+        "command": "workbench.action.focusAboveGroup",
+        "when": "terminalFocus || filesExplorerFocus"
+    },
+    {
+        "key": "ctrl+q j",
+        "command": "workbench.action.focusBelowGroup",
+        "when": "terminalFocus || filesExplorerFocus"
+    },
+    {
+        "key": "ctrl+q l",
+        "command": "workbench.action.focusRightGroup",
+        "when": "terminalFocus || filesExplorerFocus"
+    },
+    {
+        "key": "ctrl+q h",
+        "command": "workbench.action.focusLeftGroup",
+        "when": "terminalFocus || filesExplorerFocus"
+    },
+    {
+        "key": "ctrl+k o",
+        "command": "workbench.action.files.showOpenedFileInNewWindow",
+        "when": "emptyWorkspaceSupport"
+    },
+    {
+        "key": "ctrl+o",
+        "command": "workbench.action.files.openFileFolder",
+        "when": "openFolderWorkspaceSupport"
+    },
+    {
+        "key": "ctrl+k",
+        "command": "selectPrevSuggestion",
+        "when": "suggestWidgetMultipleSuggestions && suggestWidgetVisible && textInputFocus"
+    },
+    {
+        "key": "ctrl+j",
+        "command": "selectNextSuggestion",
+        "when": "suggestWidgetMultipleSuggestions && suggestWidgetVisible && textInputFocus"
+    },
+    {
+        "key": "ctrl+shift+k",
+        "command": "list.focusUp",
+        "when": "listFocus"
+    },
+    {
+        "key": "ctrl+shift+j",
+        "command": "list.focusDown",
+        "when": "listFocus"
+    },
+    {
+        "key": "ctrl+j",
+        "command": "workbench.banner.focusPreviousAction",
+        "when": "bannerFocused"
+    },
+]

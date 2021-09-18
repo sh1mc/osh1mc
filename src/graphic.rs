@@ -90,8 +90,8 @@ impl TextWriter {
             for y in 0..FONT_HEIGHT {
                 for x in 0..FONT_WIDTH {
                     GRAPHICS_WRITER.lock().set_pixel(
-                        col * FONT_WIDTH,
-                        row * FONT_HEIGHT,
+                        col * FONT_WIDTH + x,
+                        (TEXT_BUFFER_HEIGHT - row - 1) * FONT_HEIGHT + y,
                         screen_char.bg_color,
                     );
                 }
@@ -106,23 +106,30 @@ impl TextWriter {
     }
     fn scroll_row(&self) {
         let frame_buffer = GRAPHICS_WRITER.lock().get_frame_buffer();
-        for row in (0..(FRAME_BUFFER_HEIGHT - FONT_HEIGHT)).rev() {
-            for col in 0..FRAME_BUFFER_WIDTH {
+        for row in 0..(FRAME_BUFFER_HEIGHT - FONT_HEIGHT) {
+            for col in 0..(FRAME_BUFFER_WIDTH) {
                 unsafe {
-                    *((frame_buffer as usize + row * FRAME_BUFFER_WIDTH + col) as *mut u8) =
-                        *((frame_buffer as usize + (row - FONT_HEIGHT) * FRAME_BUFFER_WIDTH + col)
-                            as *mut u8)
+                    *((frame_buffer as usize + row * FRAME_BUFFER_WIDTH / 4 + col / 4) as *mut u8) =
+                        *((frame_buffer as usize
+                            + (row + FONT_HEIGHT) * FRAME_BUFFER_WIDTH / 4
+                            + col / 4) as *mut u8)
                 };
             }
         }
     }
     fn new_line(&mut self) {
+        self.render_text_buffer_row(0);
         for row in 1..TEXT_BUFFER_HEIGHT {
             for col in 0..TEXT_BUFFER_WIDTH {
                 self.text_buffer.chars[row - 1][col] = self.text_buffer.chars[row][col];
             }
         }
+        for col in 0..TEXT_BUFFER_WIDTH {
+            self.text_buffer.chars[TEXT_BUFFER_HEIGHT - 1][col] = ScreenChar::new();
+        }
         self.column_pos = 0;
+        self.scroll_row();
+        self.render_text_buffer_row(0);
     }
 }
 
@@ -136,13 +143,12 @@ pub fn init_graphics() {
             .draw_character(offset * 8, 0, character, 0xff);
     }
     */
-    for i in 0..20 {
+    for _ in 0..20 {
         TEXT_WRITER.lock().write_string("abcdefg\n");
         TEXT_WRITER.lock().write_string("123\n");
-        TEXT_WRITER.lock().render_text_buffer();
     }
     TEXT_WRITER.lock().write_string("It did not crashed!\n");
-    TEXT_WRITER.lock().render_text_buffer();
+    //GRAPHICS_WRITER.lock().clear_screen(0xff);
 }
 
 #[repr(transparent)]
