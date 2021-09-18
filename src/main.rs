@@ -6,7 +6,7 @@
 
 use bootloader::{entry_point, BootInfo};
 use core::panic::PanicInfo;
-use osh1mc::println;
+use osh1mc::{graphic::GRAPHICS_WRITER, print, println};
 use vga::writers::{Graphics320x240x256, GraphicsWriter};
 //use embedded_graphics_core::
 
@@ -67,10 +67,28 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     mode.draw_line((10, 10), (300, 220), 0xff);
     */
 
-    println!("Hello World! {}", 123);
     osh1mc::init();
     osh1mc::graphic::init_graphics();
+    println!("");
+    osh1mc::graphic::TEXT_WRITER.lock().set_color(0x03, 0x16);
+    println!("Hello World! {}", 123);
+    osh1mc::graphic::TEXT_WRITER.lock().set_color(0x00, 0xff);
+    for y in 0..osh1mc::graphic::FRAME_BUFFER_HEIGHT as i32 {
+        for x in 0..osh1mc::graphic::FRAME_BUFFER_WIDTH as i32 {
+            let x0 = x - osh1mc::graphic::FRAME_BUFFER_WIDTH as i32 / 2;
+            let y0 = y - osh1mc::graphic::FRAME_BUFFER_HEIGHT as i32 / 2;
+            let dist = ((x0 * x0 + y0 * y0) / 5 % 0x100) as u8;
+            osh1mc::graphic::GRAPHICS_WRITER
+                .lock()
+                .set_pixel(x as usize, y as usize, dist);
+        }
+    }
+    let logo = include_bytes!("logo.txt");
+    for l in logo {
+        print!("{}", *l as char);
+    }
 
+    /*
     let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
     let mut mapper = unsafe { memory::init(phys_mem_offset) };
     let mut frame_allocator = unsafe { BootInfoFrameAllocator::init(&boot_info.memory_map) };
@@ -80,10 +98,15 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
 
     let page_ptr: *mut u64 = page.start_address().as_mut_ptr();
     unsafe { page_ptr.offset(400).write_volatile(0x_f021_f077_f065_f04e) };
+    */
 
     #[cfg(test)]
     test_main();
 
+    println!(
+        "Timer: {} sec",
+        osh1mc::timer::TIMER.lock().get() as f64 / 10.0
+    );
     println!("It did not crash!");
     osh1mc::hlt_loop();
 }

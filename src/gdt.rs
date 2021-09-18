@@ -1,3 +1,4 @@
+use crate::println_info;
 use lazy_static::lazy_static;
 use x86_64::instructions::segmentation::Segment;
 use x86_64::structures::gdt::{Descriptor, GlobalDescriptorTable, SegmentSelector};
@@ -48,4 +49,5 @@ pub fn init() {
         set_cs(GDT.1.code_selector);
         load_tss(GDT.1.tss_selector);
     }
+    println_info!("GDT loaded.");
 }

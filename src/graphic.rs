@@ -3,12 +3,12 @@ use lazy_static::lazy_static;
 use spin::Mutex;
 use vga::writers::{Graphics320x240x256, GraphicsWriter, Screen};
 
-const FRAME_BUFFER_HEIGHT: usize = Graphics320x240x256::HEIGHT;
-const FRAME_BUFFER_WIDTH: usize = Graphics320x240x256::WIDTH;
-const FONT_HEIGHT: usize = 8;
-const FONT_WIDTH: usize = 8;
-const TEXT_BUFFER_HEIGHT: usize = FRAME_BUFFER_HEIGHT / FONT_HEIGHT;
-const TEXT_BUFFER_WIDTH: usize = FRAME_BUFFER_WIDTH / FONT_WIDTH;
+pub const FRAME_BUFFER_HEIGHT: usize = Graphics320x240x256::HEIGHT;
+pub const FRAME_BUFFER_WIDTH: usize = Graphics320x240x256::WIDTH;
+pub const FONT_HEIGHT: usize = 8;
+pub const FONT_WIDTH: usize = 8;
+pub const TEXT_BUFFER_HEIGHT: usize = FRAME_BUFFER_HEIGHT / FONT_HEIGHT;
+pub const TEXT_BUFFER_WIDTH: usize = FRAME_BUFFER_WIDTH / FONT_WIDTH;
 
 lazy_static! {
     pub static ref GRAPHICS_WRITER: Mutex<Graphics320x240x256> =
@@ -56,6 +56,10 @@ pub struct TextWriter {
 
 impl TextWriter {
     pub fn new() {}
+    pub fn set_color(&mut self, bg: u8, fg: u8) {
+        self.bg_color = bg;
+        self.fg_color = fg;
+    }
     pub fn write_char(&mut self, character: char) {
         match character {
             '\n' => self.new_line(),
@@ -94,7 +98,7 @@ impl TextWriter {
         let screen_char = &self.text_buffer.chars[TEXT_BUFFER_HEIGHT - row - 1][col];
         if row < TEXT_BUFFER_HEIGHT - 1 {
             let old_screen_char = &self.text_buffer.chars[TEXT_BUFFER_HEIGHT - row - 2][col];
-            if screen_char == old_screen_char && screen_char.character == ' ' {
+            if screen_char == old_screen_char && row != 0 {
                 return;
             }
         }
@@ -130,8 +134,10 @@ impl TextWriter {
 }
 
 pub fn init_graphics() {
+    use crate::println_info;
     GRAPHICS_WRITER.lock().set_mode();
     GRAPHICS_WRITER.lock().clear_screen(0x00);
+    println_info!("VGA Initialized.");
 }
 
 impl fmt::Write for TextWriter {
@@ -158,4 +164,15 @@ macro_rules! print {
 #[macro_export]
 macro_rules! println {
     ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
+}
+
+#[macro_export]
+macro_rules! println_info {
+    ($($arg:tt)*) => (
+        $crate::print!("[");
+        $crate::graphic::TEXT_WRITER.lock().set_color(0x00, 0x10);
+        $crate::print!("ok");
+        $crate::graphic::TEXT_WRITER.lock().set_color(0x00, 0xff);
+        $crate::print!("] {}\n", format_args!($($arg)*));
+    );
 }

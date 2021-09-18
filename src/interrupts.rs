@@ -1,5 +1,5 @@
 use crate::hlt_loop;
-use crate::{gdt, print, println};
+use crate::{gdt, print, println, println_info};
 use lazy_static::lazy_static;
 use pic8259::ChainedPics;
 use spin;
@@ -47,6 +47,7 @@ lazy_static! {
 }
 
 pub fn init_idt() {
+    println_info!("IDT loaded.");
     IDT.load();
 }
 
@@ -75,7 +76,9 @@ extern "x86-interrupt" fn double_fault_handler(
 }
 
 extern "x86-interrupt" fn timer_interrupt_handler(_stack_frame: InterruptStackFrame) {
-    print!(".");
+    use crate::timer::TIMER;
+    unsafe { TIMER.force_unlock() };
+    TIMER.lock().inc();
     unsafe {
         PICS.lock()
             .notify_end_of_interrupt(InterruptIndex::Timer.as_u8());

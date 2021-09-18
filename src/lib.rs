@@ -10,6 +10,7 @@ pub mod graphic;
 pub mod interrupts;
 pub mod memory;
 pub mod serial;
+pub mod timer;
 //pub mod vga_buffer;
 
 use core::panic::PanicInfo;
