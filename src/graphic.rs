@@ -156,14 +156,19 @@ pub fn _print(args: fmt::Arguments) {
     });
 }
 
+use crate::serial_print;
+
 #[macro_export]
 macro_rules! print {
-    ($($arg:tt)*) => ($crate::graphic::_print(format_args!($($arg)*)))
+    ($($arg:tt)*) => (
+        $crate::graphic::_print(format_args!($($arg)*));
+    )
+
 }
 
 #[macro_export]
 macro_rules! println {
-    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
+    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)););
 }
 
 #[macro_export]

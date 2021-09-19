@@ -6,34 +6,14 @@
 
 extern crate alloc;
 
-use alloc::boxed::Box;
+use alloc::{boxed::Box, rc::Rc, vec, vec::Vec};
 use bootloader::{entry_point, BootInfo};
-use core::panic::PanicInfo;
+use core::{iter::Cloned, panic::PanicInfo};
 use osh1mc::{graphic::GRAPHICS_WRITER, print, println};
 use vga::writers::GraphicsWriter;
 use x86_64::structures::paging::frame;
 
 entry_point!(kernel_main);
-
-fn max(x: i32, y: i32) -> i32 {
-    let ret;
-    if x > y {
-        ret = x;
-    } else {
-        ret = y;
-    }
-    ret
-}
-
-fn abs(x: i32) -> i32 {
-    let ret;
-    if x < 0 {
-        ret = x * -1;
-    } else {
-        ret = x;
-    }
-    ret
-}
 
 #[no_mangle]
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
@@ -41,34 +21,6 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     use osh1mc::memory::BootInfoFrameAllocator;
     use x86_64::structures::paging::Page;
     use x86_64::VirtAddr;
-
-    /*
-    use vga::colors::{Color16, TextModeColor};
-    //use vga::writers::{ScreenCharacter, TextWriter, Text80x25};
-    let mode = Graphics320x240x256::new();
-    mode.set_mode();
-    mode.clear_screen(0x00);
-    let height = 240;
-    let width = 320;
-    let frame_buf = mode.get_frame_buffer();
-    for y in 0..height {
-        for x in 0..width {
-            let get_pixel = || {
-                unsafe {*(((frame_buf as i32) + (x + y * width) / 4) as *mut u8)}
-            };
-            let x_fixed = x - width / 2;
-            let y_fixed = y - height / 2;
-            let set_pixel = |col| {
-                unsafe {*(((frame_buf as i32) + (x + y * width) / 4) as *mut u8) = col};
-            };
-            let col: u8 = if max(abs(x_fixed), abs(y_fixed)) < 50 {0x20} else {get_pixel()};
-            set_pixel(col);
-            let col: u8 = if x_fixed * x_fixed + y_fixed * y_fixed < 1000 {0x10} else {get_pixel()};
-            set_pixel(col);
-        }
-    }
-    mode.draw_line((10, 10), (300, 220), 0xff);
-    */
 
     use osh1mc::allocator;
     use osh1mc::graphic::{FRAME_BUFFER_HEIGHT, FRAME_BUFFER_WIDTH};
@@ -92,11 +44,28 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
                 .set_pixel(x as usize, y as usize, color);
         }
     }
-    let x = Box::new(41);
     let logo = include_bytes!("data/logo.txt");
     for l in logo {
         print!("{}", *l as char);
     }
+    let heap_value = Box::new(41);
+    println!("heap_value at {:p}", heap_value);
+    let mut vector = Vec::new();
+    for i in 0..500 {
+        vector.push(i);
+    }
+    println!("vector at {:p}", vector.as_slice());
+    let reference_counted = Rc::new(vec![1, 2, 3]);
+    let cloned_refernce = reference_counted.clone();
+    println!(
+        "current reference count is {}, 0",
+        Rc::strong_count(&cloned_refernce)
+    );
+    core::mem::drop(reference_counted);
+    println!(
+        "current reference count is {}, 1",
+        Rc::strong_count(&cloned_refernce)
+    );
 
     /*
     let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
