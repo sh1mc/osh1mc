@@ -46,6 +46,15 @@ fn large_vec() {
     assert_eq!(vec.iter().sum::<u64>(), (n - 1) * n / 2);
 }
 
+use osh1mc::allocator::HEAP_SIZE;
+#[test_case]
+fn many_boxes() {
+    for i in 0..HEAP_SIZE {
+        let x = Box::new(i);
+        assert_eq!(*x, i);
+    }
+}
+
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     osh1mc::test_panic_handler(info);

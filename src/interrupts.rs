@@ -47,8 +47,8 @@ lazy_static! {
 }
 
 pub fn init_idt() {
-    println_info!("IDT loaded.");
     IDT.load();
+    println_info!("IDT loaded.");
 }
 
 extern "x86-interrupt" fn breakpoint_handler(stack_frame: InterruptStackFrame) {

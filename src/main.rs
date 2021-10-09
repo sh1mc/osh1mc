@@ -8,10 +8,9 @@ extern crate alloc;
 
 use alloc::{boxed::Box, rc::Rc, vec, vec::Vec};
 use bootloader::{entry_point, BootInfo};
-use core::{iter::Cloned, panic::PanicInfo};
-use osh1mc::{graphic::GRAPHICS_WRITER, print, println};
+use core::panic::PanicInfo;
+use osh1mc::{print, println};
 use vga::writers::GraphicsWriter;
-use x86_64::structures::paging::frame;
 
 entry_point!(kernel_main);
 
@@ -19,7 +18,6 @@ entry_point!(kernel_main);
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
     use osh1mc::memory;
     use osh1mc::memory::BootInfoFrameAllocator;
-    use x86_64::structures::paging::Page;
     use x86_64::VirtAddr;
 
     use osh1mc::allocator;
@@ -68,6 +66,7 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     );
 
     /*
+    use x86_64::structures::paging::Page;
     let phys_mem_offset = VirtAddr::new(boot_info.physical_memory_offset);
 
     let page = Page::containing_address(VirtAddr::new(0xdeadbeaf000));
